@@ -1,0 +1,20 @@
+scripts:
+    tryme:
+    - sh: whoami
+    - sh: date
+    - sh: echo ${{message}}
+
+hosts:
+    server: tschotan@localhost
+    local: LOCAL
+    container: quay.io/fedora/fedora
+
+roles:
+    test:
+        hosts:
+        - server
+        run-scripts:
+        - tryme
+
+states:
+    message: Hello, qDup!
