@@ -35,15 +35,15 @@ scripts:
   - log: Starting PostgreSQL...
   - script: container_start
     with:
-      name: ${{name | default("postgresql")}}
+      name: ${{name:postgresql}}
       image: postgres:15
-      port: ${{port | default(5432)}}
+      port: ${{port:5432}}
       opts: -v ${{initdb_dir}}:/docker-entrypoint-initdb.d/:z ${{opts}}
   - script: postgresql_wait
 
   postgresql_wait:
   - log: Waiting for PostgreSQL to be ready...
-  - sh: until ${{RUNTIME}} exec ${{name | default("postgresql")}} pg_isready -h localhost -p ${{port | default(5432)}}; do sleep 3; done
+  - sh: until ${{RUNTIME}} exec ${{name:postgresql}} pg_isready -h localhost -p ${{port:5432}}; do sleep 3; done
     timer:
       90s:
       - ctrlC
@@ -57,7 +57,7 @@ scripts:
   - log: Stopping PostgreSQL...
   - script: container_stop
     with:
-      name: ${{name | default("postgresql")}}
+      name: ${{name:postgresql}}
 
   # Starts a container with the specified image and options
   # Arguments:

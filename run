@@ -13,4 +13,4 @@ else
     TEST_DIR=$(dirname "$(realpath "$TEST_FILE")")
 fi
 
-./qdup testrunner.yml funcs.yml ${TEST_FILE} -S TEST_DIR=${TEST_DIR} -S CACHE_DIR=/tmp/qdup-cache -S RUN_DIR=/tmp/qdup-run
+./qdup ${TEST_FILE} testrunner.yml funcs.yml -S TEST_DIR=${TEST_DIR} -S CACHE_DIR=/tmp/qdup-cache -S RUN_DIR=/tmp/qdup-run
