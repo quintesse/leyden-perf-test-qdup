@@ -7,12 +7,24 @@ scripts:
   - sh: export HOME="${{CACHE_DIR}}"
   - sh: cd
   - script: setup
+    with:
+      test_dir: "${{TEST_DIR}}"
+      setup_dir: "${{CACHE_DIR}}"
   
+  start_test_infra:
+  - sh: export HOME="${{RUN_DIR}}"
+  - sh: cd
+  - script: pre
+    with:
+      test_dir: "${{TEST_DIR}}"
+      setup_dir: "${{CACHE_DIR}}"
+
   run_test_app:
   - sh: export HOME="${{RUN_DIR}}"
   - sh: cd
   - script: run
     with:
+      test_dir: "${{TEST_DIR}}"
       setup_dir: "${{CACHE_DIR}}"
     on-signal:
       TEST_END:
@@ -34,22 +46,27 @@ scripts:
       urls_file: "${TEST_DIR}/../urls.txt"
   - signal: TEST_END
 
-  test_cleanup:
+  stop_test_infra:
   - sh: export HOME="${{RUN_DIR}}"
   - sh: cd
-  - log: Test cleanup...
-  - script: cleanup
+  - script: post
+    with:
+      test_dir: "${{TEST_DIR}}"
+      setup_dir: "${{CACHE_DIR}}"
 
   # The following scripts should/can be overridden by test-specific files
 
   setup:
   - abort: No test setup defined! Did you include a test YAML file?
 
+  pre:
+  - log: No test infrastructure setup defined.
+
   run:
   - abort: No test run defined! Did you include a test YAML file?
 
-  cleanup:
-  - log: No test cleanup defined.
+  post:
+  - log: No test infrastructure cleanup defined.
 
 hosts:
   server: tschotan@localhost
@@ -61,16 +78,18 @@ roles:
     - local
     setup-scripts:
     - test_setup
+    - start_test_infra
     run-scripts:
     - run_test_app
     - run_test_driver
     cleanup-scripts:
-    - test_cleanup
+    - stop_test_infra
 
 states:
   TEST_DIR: /tmp
   CACHE_DIR: /tmp
   RUN_DIR: /tmp
+  RUNTIME: podman
   TOTAL_REQ: 10000
   RATE: 1000
   DURATION: 10

@@ -25,6 +25,57 @@ scripts:
   - sh: cd "${{dir}}"
   - sh: ./mvnw clean deploy -s "local-settings.xml" "-Dperf.test.repo=mvn_repo" "-DaltDeploymentRepository=local-repo::default::file:mvn_repo" -DskipTests $opts > leyden-perf-test-build.log 2>&1
 
+  # Starts a PostgreSQL container
+  # Arguments:
+  #   name: The name of the container (default: "postgresql")
+  #   port: The port to expose (default: 5432)
+  #   initdb_dir: The directory containing SQL scripts to initialize the database
+  #   opts: Additional options to pass to the container runtime
+  postgresql_start:
+  - log: Starting PostgreSQL...
+  - script: container_start
+    with:
+      name: ${{name | default("postgresql")}}
+      image: postgres:15
+      port: ${{port | default(5432)}}
+      opts: -v ${{initdb_dir}}:/docker-entrypoint-initdb.d/:z ${{opts}}
+  - script: postgresql_wait
+
+  postgresql_wait:
+  - log: Waiting for PostgreSQL to be ready...
+  - sh: until ${{RUNTIME}} exec ${{name | default("postgresql")}} pg_isready -h localhost -p ${{port | default(5432)}}; do sleep 3; done
+    timer:
+      90s:
+      - ctrlC
+      - abort: ">>> POSTGRESQL START TIMED OUT, aborting..."
+  - signal: PSQL_READY
+
+  # Stops a PostgreSQL container
+  # Arguments:
+  #   name: The name of the container to stop (default: "postgresql")
+  postgresql_stop:
+  - log: Stopping PostgreSQL...
+  - script: container_stop
+    with:
+      name: ${{name | default("postgresql")}}
+
+  # Starts a container with the specified image and options
+  # Arguments:
+  #   name: The name of the container
+  #   image: The container image to use
+  #   port: The port to expose
+  #   opts: Additional options to pass to the container runtime
+  container_start:
+  - log: Starting container...
+  - sh: ${{RUNTIME}} run -d --rm --name "${{name}}" -p ${{port}}:${{port}} ${{opts}} ${{image}}
+
+  # Stops a container with the specified name
+  # Arguments:
+  #   name: The name of the container to stop
+  container_stop:
+  - log: Stopping container...
+  - sh: ${{RUNTIME}} stop "${{name}}"
+
   # Runs the OHA test driver
   # Arguments:
   #   rate: The request rate to use (e.g., "1000")

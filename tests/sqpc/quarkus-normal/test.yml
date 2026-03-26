@@ -13,6 +13,12 @@ scripts:
     with:
       dir: sqpc
   
+  pre:
+  - script: postgresql_start
+    with:
+      initdb_dir: ${{setup_dir}}/sqpc/scripts/dbdata
+      opts: -e POSTGRES_USER=fruits -e POSTGRES_PASSWORD=fruits -e POSTGRES_DB=fruits
+  
   run:
   - log: Starting the test application...
   - sh: java -jar "${{setup_dir}}/sqpc/quarkus3/target/quarkus-app/quarkus-run.jar"
@@ -20,3 +26,6 @@ scripts:
       - regex: ".*Listening on.*"
         then:
           - signal: TEST_APP_READY
+
+  post:
+  - script: postgresql_stop
