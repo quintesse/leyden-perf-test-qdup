@@ -1,0 +1,76 @@
+name: leyden-perf-test-qdup
+
+scripts:
+  test_setup:
+  - sh: mkdir -p "${{CACHE_DIR}}"
+  - sh: mkdir -p "${{RUN_DIR}}"
+  - sh: export HOME="${{CACHE_DIR}}"
+  - sh: cd
+  - script: setup
+  
+  run_test_app:
+  - sh: export HOME="${{RUN_DIR}}"
+  - sh: cd
+  - script: run
+    with:
+      setup_dir: "${{CACHE_DIR}}"
+    on-signal:
+      TEST_END:
+      - ctrlC
+    timer:
+      60s:
+      - log: ">>> TEST TIMED OUT, terminating the test application..."
+      - ctrlC
+
+  run_test_driver:
+  - sh: export HOME="${{RUN_DIR}}"
+  - sh: cd
+  - log: Starting the test driver...
+  - wait-for: TEST_APP_READY
+  - script: oha
+    with:
+      rate: "${RATE}"
+      duration: "${DURATION}"
+      urls_file: "${TEST_DIR}/../urls.txt"
+  - signal: TEST_END
+
+  test_cleanup:
+  - sh: export HOME="${{RUN_DIR}}"
+  - sh: cd
+  - log: Test cleanup...
+  - script: cleanup
+
+  # The following scripts should/can be overridden by test-specific files
+
+  setup:
+  - abort: No test setup defined! Did you include a test YAML file?
+
+  run:
+  - abort: No test run defined! Did you include a test YAML file?
+
+  cleanup:
+  - log: No test cleanup defined.
+
+hosts:
+  server: tschotan@localhost
+  local: LOCAL
+
+roles:
+  test:
+    hosts:
+    - local
+    setup-scripts:
+    - test_setup
+    run-scripts:
+    - run_test_app
+    - run_test_driver
+    cleanup-scripts:
+    - test_cleanup
+
+states:
+  TEST_DIR: /tmp
+  CACHE_DIR: /tmp
+  RUN_DIR: /tmp
+  TOTAL_REQ: 10000
+  RATE: 1000
+  DURATION: 10

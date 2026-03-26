@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 <test_name>..."
+    exit 1
+fi
+
+./qdup testrunner.yml funcs.yml tests/$1/test.yml -S TEST_DIR=$1 -S CACHE_DIR=/tmp/qdup-cache -S RUN_DIR=/tmp/qdup-run

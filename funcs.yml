@@ -1,0 +1,35 @@
+
+scripts:
+
+  # Creates a shallow clone of the specified repository
+  # Arguments:
+  #   repo: The GitHub repository to clone (e.g., "user/repo")
+  #   dir: The directory where the repository should be cloned
+  clone:
+  - log: Cloning ${{repo}}...
+  - sh: git clone -q --depth 1 https://github.com/${{repo}}.git ${{dir}}
+
+  # Sets up the Java environment
+  # Arguments:
+  #   version: The Java version to use (e.g., "11", "17", "21+")
+  java:
+  - log: Using Java version ${{version}}...
+  - sh: eval $(jbang jdk env ${{version}})
+
+  # Builds a Maven project
+  # Arguments:
+  #   dir: The directory of the Maven project to build
+  compile_maven:
+  - log: Compiling Maven project in ${{dir}}...
+  - upload: ${{ENV.SCRIPT_DIR}}/local-settings.xml ${{dir}}/
+  - sh: cd "${{dir}}"
+  - sh: ./mvnw clean deploy -s "local-settings.xml" "-Dperf.test.repo=mvn_repo" "-DaltDeploymentRepository=local-repo::default::file:mvn_repo" -DskipTests $opts > leyden-perf-test-build.log 2>&1
+
+  # Runs the OHA test driver
+  # Arguments:
+  #   rate: The request rate to use (e.g., "1000")
+  #   duration: The duration of the test in seconds (e.g., "10")
+  #   urls_file: The file containing the URLs to test
+  oha:
+  - log: Starting the test driver...
+  - sh: oha -q "${rate}" -z "${duration}s" -c 50 -u ms --latency-correction -t=10s --no-tui --output-format json -o "oha.json" --db-url "oha.db" --urls-from-file "${urls_file}"

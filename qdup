@@ -1,12 +1,12 @@
 #!/bin/bash
 
 if [ -z "$1" ]; then
-    echo "Usage: $0 [additional qdup options] <qdup_yaml_file>"
+    echo "Usage: $0 [additional qdup options] <qdup_yaml_file>..."
     exit 1
 fi
 
-if [ ! -z "$QDUP_PWD" ]; then
-    PWDFLAG="-p $QDUP_PWD"
+if [ ! -z "$QDUP_SSH_PWD" ]; then
+    PWDFLAG="-p $QDUP_SSH_PWD"
 fi
 
-jbang qDup@hyperfoil -b /tmp/qdup $PWDFLAG $@
+jbang qDup@hyperfoil -B /tmp/qdup $PWDFLAG $@

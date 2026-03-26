@@ -1,0 +1,22 @@
+
+scripts:
+
+  setup:
+  - script: clone
+    with:
+      repo: quarkusio/spring-quarkus-perf-comparison
+      dir: sqpc
+  - script: java
+    with:
+      version: 21+
+  - script: compile_maven
+    with:
+      dir: sqpc
+  
+  run:
+  - log: Starting the test application...
+  - sh: java -jar "${{setup_dir}}/sqpc/quarkus3/target/quarkus-app/quarkus-run.jar"
+    watch:
+      - regex: ".*Listening on.*"
+        then:
+          - signal: TEST_APP_READY
