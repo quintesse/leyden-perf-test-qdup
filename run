@@ -5,4 +5,12 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-./qdup testrunner.yml funcs.yml tests/$1/test.yml -S TEST_DIR=$1 -S CACHE_DIR=/tmp/qdup-cache -S RUN_DIR=/tmp/qdup-run
+if [[ "$1" != *test.yml ]]; then
+    TEST_FILE="$1/test.yml"
+    TEST_DIR=$(realpath "$1")
+else
+    TEST_FILE="$1"
+    TEST_DIR=$(dirname "$(realpath "$TEST_FILE")")
+fi
+
+./qdup testrunner.yml funcs.yml ${TEST_FILE} -S TEST_DIR=${TEST_DIR} -S CACHE_DIR=/tmp/qdup-cache -S RUN_DIR=/tmp/qdup-run
