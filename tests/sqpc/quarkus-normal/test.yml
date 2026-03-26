@@ -11,7 +11,7 @@ scripts:
       version: 21+
   - script: compile_maven
     with:
-      dir: sqpc
+      dir: ${{setup_dir}}/sqpc
   
   pre:
   - script: postgresql_start
@@ -22,8 +22,15 @@ scripts:
   run:
   - log: Starting the test application...
   - sh: java -jar "${{setup_dir}}/sqpc/quarkus3/target/quarkus-app/quarkus-run.jar"
+    on-signal:
+      TEST_END:
+      - ctrlC
+    timer:
+      60s:
+      - log: ">>> TEST TIMED OUT, terminating the test application..."
+      - ctrlC
     watch:
-      - regex: ".*Listening on.*"
+      - regex: ".*Listening on:.*"
         then:
           - signal: TEST_APP_READY
 

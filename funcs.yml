@@ -36,7 +36,7 @@ scripts:
   - script: container_start
     with:
       name: ${{name:postgresql}}
-      image: postgres:15
+      image: ghcr.io/quarkusio/postgres-17-perf:main
       port: ${{port:5432}}
       opts: -v ${{initdb_dir}}:/docker-entrypoint-initdb.d/:z ${{opts}}
   - script: postgresql_wait
@@ -67,6 +67,7 @@ scripts:
   #   opts: Additional options to pass to the container runtime
   container_start:
   - log: Starting container...
+  - sh: ${{RUNTIME}} stop "${{name}}" || true # Make sure the container is not running
   - sh: ${{RUNTIME}} run -d --rm --name "${{name}}" -p ${{port}}:${{port}} ${{opts}} ${{image}}
 
   # Stops a container with the specified name
@@ -83,4 +84,4 @@ scripts:
   #   urls_file: The file containing the URLs to test
   oha:
   - log: Starting the test driver...
-  - sh: oha -q "${rate}" -z "${duration}s" -c 50 -u ms --latency-correction -t=10s --no-tui --output-format json -o "oha.json" --db-url "oha.db" --urls-from-file "${urls_file}"
+  - sh: oha -q "${{rate}}" -z "${{duration}}s" -c 50 -u ms --latency-correction -t=10s --no-tui --output-format json -o "oha.json" --db-url "oha.db" --urls-from-file "${{urls_file}}"
